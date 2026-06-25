@@ -308,6 +308,57 @@ def format_success(message: str) -> str:
     return f"✅ {message}"
 
 
+def hours_to_iso8601_duration(hours: float) -> str:
+    """Convert a duration in hours to an ISO 8601 duration string.
+
+    OpenProject's ``estimatedTime`` / ``remainingTime`` properties expect ISO
+    8601 durations (e.g. ``PT16H``, ``PT2H30M``). Fractional hours are split into
+    hours and minutes (2.5 -> ``PT2H30M``) rather than emitting decimals like
+    ``PT2.5H``, which not all OpenProject versions accept.
+
+    Args:
+        hours: Duration in hours (supports fractional values).
+
+    Returns:
+        ISO 8601 duration string. Returns ``PT0H`` for a zero duration.
+    """
+    total_minutes = round(hours * 60)
+    h, m = divmod(total_minutes, 60)
+
+    result = "PT"
+    if h:
+        result += f"{h}H"
+    if m:
+        result += f"{m}M"
+    if result == "PT":
+        result = "PT0H"
+    return result
+
+
+def iso8601_duration_to_hours(duration: Optional[str]) -> Optional[float]:
+    """Parse an ISO 8601 duration (hours/minutes) back into hours for display.
+
+    Handles the ``PT<h>H<m>M`` forms produced by OpenProject. Returns None if the
+    value is missing or unparseable.
+
+    Args:
+        duration: ISO 8601 duration string (e.g. ``PT16H``, ``PT2H30M``).
+
+    Returns:
+        Duration in hours as a float, or None.
+    """
+    if not duration or not isinstance(duration, str):
+        return None
+    import re
+
+    match = re.fullmatch(r"PT(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?", duration)
+    if not match or (match.group(1) is None and match.group(2) is None):
+        return None
+    h = float(match.group(1)) if match.group(1) else 0.0
+    m = float(match.group(2)) if match.group(2) else 0.0
+    return h + m / 60
+
+
 def format_news_list(news_items: List[Dict]) -> str:
     """Format news list with project, author, and dates.
 

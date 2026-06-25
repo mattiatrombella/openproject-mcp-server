@@ -10,6 +10,8 @@ from src.utils.formatting import (
     format_work_package_detail,
     format_success,
     format_error,
+    hours_to_iso8601_duration,
+    iso8601_duration_to_hours,
 )
 
 
@@ -27,6 +29,8 @@ class CreateWorkPackageInput(BaseModel):
     status_id: Optional[int] = Field(None, description="Status ID", gt=0)
     priority_id: Optional[int] = Field(None, description="Priority ID", gt=0)
     version_id: Optional[int] = Field(None, description="Version/milestone ID to assign work package to", gt=0)
+    estimated_hours: Optional[float] = Field(None, description="Work (estimated time) in hours, e.g. 16 or 2.5", ge=0)
+    remaining_hours: Optional[float] = Field(None, description="Remaining work in hours, e.g. 14 or 2.5", ge=0)
 
 
 class UpdateWorkPackageInput(BaseModel):
@@ -43,6 +47,8 @@ class UpdateWorkPackageInput(BaseModel):
     due_date: Optional[str] = Field(None, description="New due date (YYYY-MM-DD)")
     percentage_done: Optional[int] = Field(None, description="Progress percentage (0-100)", ge=0, le=100)
     version_id: Optional[int] = Field(None, description="Version/milestone ID to assign work package to", gt=0)
+    estimated_hours: Optional[float] = Field(None, description="Work (estimated time) in hours, e.g. 16 or 2.5", ge=0)
+    remaining_hours: Optional[float] = Field(None, description="Remaining work in hours, e.g. 14 or 2.5", ge=0)
 
 
 @mcp.tool
@@ -436,6 +442,16 @@ async def create_work_package(input: CreateWorkPackageInput) -> str:
         if input.due_date:
             data["dueDate"] = input.due_date
 
+        # Work / Remaining work as ISO 8601 durations (top-level scalars).
+        # NOTE: In recent OpenProject versions Work (estimatedTime),
+        # Remaining work (remainingTime) and % Complete (percentageDone) are
+        # interdependent: when two are set the API derives the third. Setting
+        # estimatedTime + remainingTime, for example, recomputes percentageDone.
+        if input.estimated_hours is not None:
+            data["estimatedTime"] = hours_to_iso8601_duration(input.estimated_hours)
+        if input.remaining_hours is not None:
+            data["remainingTime"] = hours_to_iso8601_duration(input.remaining_hours)
+
         # Create work package
         result = await client.create_work_package(data)
 
@@ -461,6 +477,13 @@ async def create_work_package(input: CreateWorkPackageInput) -> str:
             text += f"**Start Date**: {result['startDate']}\n"
         if result.get('dueDate'):
             text += f"**Due Date**: {result['dueDate']}\n"
+
+        est = iso8601_duration_to_hours(result.get('estimatedTime'))
+        if est is not None:
+            text += f"**Work**: {est:g}h\n"
+        rem = iso8601_duration_to_hours(result.get('remainingTime'))
+        if rem is not None:
+            text += f"**Remaining work**: {rem:g}h\n"
 
         return text
 
@@ -520,6 +543,17 @@ async def update_work_package(input: UpdateWorkPackageInput) -> str:
         if input.due_date is not None:
             data["dueDate"] = input.due_date
 
+        # Work / Remaining work as ISO 8601 durations (top-level scalars).
+        # NOTE: In recent OpenProject versions Work (estimatedTime),
+        # Remaining work (remainingTime) and % Complete (percentageDone) are
+        # interdependent: when two are set the API derives the third. Sending
+        # estimated_hours + remaining_hours will recompute percentage_done; to
+        # preserve an explicit percentage_done set only one of the two here.
+        if input.estimated_hours is not None:
+            data["estimatedTime"] = hours_to_iso8601_duration(input.estimated_hours)
+        if input.remaining_hours is not None:
+            data["remainingTime"] = hours_to_iso8601_duration(input.remaining_hours)
+
         if not data:
             return format_error("No fields provided to update")
 
@@ -550,6 +584,13 @@ async def update_work_package(input: UpdateWorkPackageInput) -> str:
             text += f"**Due Date**: {result['dueDate']}\n"
         if 'percentageDone' in result:
             text += f"**Progress**: {result['percentageDone']}%\n"
+
+        est = iso8601_duration_to_hours(result.get('estimatedTime'))
+        if est is not None:
+            text += f"**Work**: {est:g}h\n"
+        rem = iso8601_duration_to_hours(result.get('remainingTime'))
+        if rem is not None:
+            text += f"**Remaining work**: {rem:g}h\n"
 
         return text
 

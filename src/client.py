@@ -284,6 +284,12 @@ class OpenProjectClient:
         if "date" in data:
             payload["date"] = data["date"]
 
+        # Work / Remaining work (ISO 8601 durations, top-level scalars)
+        if "estimatedTime" in data:
+            payload["estimatedTime"] = data["estimatedTime"]
+        if "remainingTime" in data:
+            payload["remainingTime"] = data["remainingTime"]
+
         # Create work package
         return await self._request("POST", "/work_packages", payload)
 
@@ -502,6 +508,12 @@ class OpenProjectClient:
             payload["dueDate"] = data["dueDate"]
         if "date" in data:
             payload["date"] = data["date"]
+
+        # Work / Remaining work (ISO 8601 durations, top-level scalars)
+        if "estimatedTime" in data:
+            payload["estimatedTime"] = data["estimatedTime"]
+        if "remainingTime" in data:
+            payload["remainingTime"] = data["remainingTime"]
 
         return await self._request(
             "PATCH", f"/work_packages/{work_package_id}", payload
