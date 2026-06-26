@@ -1,204 +1,150 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/andyeverything-openproject-mcp-server-badge.png)](https://mseep.ai/app/andyeverything-openproject-mcp-server)
-
-<br>![status](https://img.shields.io/badge/status-WIP-yellow) ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)<br><br>⚠️ This is an early-stage project. Do not use it productively – contributions welcome!<br>
-
 # OpenProject MCP Server
 
-A Model Context Protocol (MCP) server that provides seamless integration with [OpenProject](https://www.openproject.org/) API v3. This server enables LLM applications to interact with OpenProject for project management, work package tracking, and task creation.
+![status](https://img.shields.io/badge/status-WIP-yellow)
 
-## Features
+A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for the [OpenProject](https://www.openproject.org/) API v3. It lets LLM applications — Claude Desktop, Claude Code, and any other MCP client — read and manage projects, work packages, time entries, memberships, and more in your OpenProject instance through natural language.
 
-- 🔌 **Full OpenProject API v3 Integration**
-- 📋 **Project Management**: List and filter projects
-- 📝 **Work Package Management**: Create, list, and filter work packages
-- 🏷️ **Type Management**: List available work package types
-- 🔐 **Secure Authentication**: API key-based authentication
-- 🌐 **Proxy Support**: Optional HTTP proxy configuration
-- 🚀 **Async Operations**: Built with modern async/await patterns
-- 📊 **Comprehensive Logging**: Configurable logging levels
-
-## Prerequisites
-
-- Python 3.10 or higher
-- [uv](https://docs.astral.sh/uv/) (fast Python package manager)
-- An OpenProject instance (cloud or self-hosted)
-- OpenProject API key (generated from your user profile)
-
-## Installation
-
-### 1. Install uv (if not already installed)
-
-**macOS/Linux:**
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-**Windows:**
-```powershell
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-**Alternative (using pip):**
-```bash
-pip install uv
-```
-
-### 2. Clone and Setup the Project
-
-```bash
-git clone https://github.com/yourusername/openproject-mcp.git
-cd openproject-mcp
-```
-
-### 3. Create Virtual Environment and Install Dependencies
-
-```bash
-# Create virtual environment and install dependencies in one command
-uv sync
-```
-
-**Alternative (manual steps):**
-```bash
-# Create virtual environment
-uv venv
-
-# Install dependencies
-uv pip install -r requirements.txt
-```
-
-### 4. Configure Environment
-
-```bash
-# Copy the environment template
-cp env_example.txt .env
-```
-
-Edit `.env` and add your OpenProject configuration:
-```env
-OPENPROJECT_URL=https://your-instance.openproject.com
-OPENPROJECT_API_KEY=your-api-key-here
-```
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `OPENPROJECT_URL` | Yes | Your OpenProject instance URL | `https://mycompany.openproject.com` |
-| `OPENPROJECT_API_KEY` | Yes | API key from your OpenProject user profile | `8169846b42461e6e...` |
-| `OPENPROJECT_PROXY` | No | HTTP proxy URL if needed | `http://proxy.company.com:8080` |
-| `LOG_LEVEL` | No | Logging level (DEBUG, INFO, WARNING, ERROR) | `INFO` |
-| `TEST_CONNECTION_ON_STARTUP` | No | Test API connection when server starts | `true` |
-
-### Getting an API Key
-
-1. Log in to your OpenProject instance
-2. Go to **My account** (click your avatar)
-3. Navigate to **Access tokens**
-4. Click **+ Add** to create a new token
-5. Give it a name and copy the generated token
-
-## Usage
-
-### Deployment Options
-
-This MCP server can be deployed in two ways:
-
-1. **Local (stdio)**: Run on your local machine for personal use
-2. **Cloud (SSE)**: Deploy to FastMCP Cloud for team/organization access
-
-### Option 1: Local Deployment (stdio)
-
-#### Running the Server
-
-**Using uv (recommended):**
-```bash
-uv run python openproject-mcp-fastmcp.py
-```
-
-**Alternative (manual activation):**
-```bash
-# Activate virtual environment
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Run the server
-python openproject-mcp-fastmcp.py
-```
-
-**File Structure:**
-- `openproject-mcp-fastmcp.py` - Stdio transport (for local Claude Desktop)
-- `openproject-mcp-sse.py` - SSE transport (for FastMCP Cloud)
-- `src/` - Core implementation using FastMCP framework
-  - `src/server.py` - FastMCP server initialization
-  - `src/client.py` - OpenProject API client
-  - `src/tools/` - All 40+ MCP tools organized by category
-
-#### Integration with Claude Desktop
-
-**Quick Install Using CLI (Recommended):**
-
-This command works for both **Claude Desktop** and **Claude Code (VSCode extension)**.
-
-```powershell
-# Windows - Replace <YOUR_PROJECT_PATH> with your actual path
-claude mcp add openproject-fastmcp "<YOUR_PROJECT_PATH>\.venv\Scripts\python.exe" "<YOUR_PROJECT_PATH>\openproject-mcp-fastmcp.py" -e "PYTHONPATH=<YOUR_PROJECT_PATH>" -e "OPENPROJECT_URL=https://your-instance.com" -e "OPENPROJECT_API_KEY=your-api-key"
-```
-
-```bash
-# macOS/Linux - Replace <YOUR_PROJECT_PATH> with your actual path
-claude mcp add openproject-fastmcp "<YOUR_PROJECT_PATH>/.venv/bin/python" "<YOUR_PROJECT_PATH>/openproject-mcp-fastmcp.py" -e "PYTHONPATH=<YOUR_PROJECT_PATH>" -e "OPENPROJECT_URL=https://your-instance.com" -e "OPENPROJECT_API_KEY=your-api-key"
-```
-
-**Example (Windows):**
-```powershell
-# If you cloned the project to C:\Users\YourName\openproject-mcp-server
-claude mcp add openproject-fastmcp "C:\Users\YourName\openproject-mcp-server\.venv\Scripts\python.exe" "C:\Users\YourName\openproject-mcp-server\openproject-mcp-fastmcp.py" -e "PYTHONPATH=C:\Users\YourName\openproject-mcp-server" -e "OPENPROJECT_URL=https://manage.example.com" -e "OPENPROJECT_API_KEY=abc123xyz456"
-```
-
-**Example (macOS/Linux):**
-```bash
-# If you cloned the project to /home/yourname/openproject-mcp-server
-claude mcp add openproject-fastmcp "/home/yourname/openproject-mcp-server/.venv/bin/python" "/home/yourname/openproject-mcp-server/openproject-mcp-fastmcp.py" -e "PYTHONPATH=/home/yourname/openproject-mcp-server" -e "OPENPROJECT_URL=https://manage.example.com" -e "OPENPROJECT_API_KEY=abc123xyz456"
-```
-
-**Important:** Replace the following values:
-- `<YOUR_PROJECT_PATH>` with your actual installation directory
-- `https://your-instance.com` with your OpenProject URL
-- `your-api-key` with your API key from Account Settings
-
-**Verify Installation:**
-```powershell
-claude mcp list
-```
-
-You should see:
-```
-openproject-fastmcp: ... - ✓ Connected
-```
-
-After running the command, restart Claude Desktop or reload VSCode window.
+> ⚠️ **Early-stage project.** Expect rough edges. Not recommended for production use yet.
 
 ---
 
-**Manual Configuration:**
+## Table of Contents
 
-Add this configuration to your Claude Desktop config file:
+- [What you can do](#what-you-can-do)
+- [Requirements](#requirements)
+- [Quick start](#quick-start)
+- [Configuration](#configuration)
+- [Connecting an MCP client](#connecting-an-mcp-client)
+- [Cloud deployment](#cloud-deployment-fastmcp)
+- [Available tools](#available-tools)
+- [Notes & known limitations](#notes--known-limitations)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
+- [Security](#security)
+- [License](#license)
 
-**Config file locations:**
+---
+
+## What you can do
+
+- **Projects** — create, update, delete, list, inspect, manage sub-projects
+- **Work packages** — full CRUD plus rich filtering (priority, type, status, dates, completion %, assignee, parent…)
+- **Hierarchy & relations** — parent/child links and dependency relations (blocks, follows, relates…)
+- **Time tracking** — log, edit, delete, and list time entries
+- **Members & roles** — manage memberships, list members and roles
+- **Versions** — create and list project versions/milestones
+- **News** — create, update, delete, list project news
+- **Reports** — generate weekly activity reports
+- **Comments & assignment** — comment on and assign work packages
+
+Around **60 tools** in total. See [Available tools](#available-tools).
+
+---
+
+## Requirements
+
+- **Python 3.10+**
+- **[uv](https://docs.astral.sh/uv/)** — fast Python package/venv manager
+- An **OpenProject instance** (cloud or self-hosted)
+- An **OpenProject API key** (see [Getting an API key](#getting-an-api-key))
+
+---
+
+## Quick start
+
+```bash
+# 1. Install uv
+#    macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+#    Windows (PowerShell)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# 2. Clone
+git clone https://github.com/mattiatrombella/openproject-mcp-server.git
+cd openproject-mcp-server
+
+# 3. Install dependencies (creates .venv automatically)
+uv sync
+
+# 4. Configure credentials
+cp env_example.txt .env        # then edit .env
+
+# 5. Run the server (stdio transport)
+uv run python openproject-mcp-fastmcp.py
+```
+
+---
+
+## Configuration
+
+Credentials come from environment variables, either via a `.env` file or passed directly by your MCP client (preferred — see below).
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `OPENPROJECT_URL` | ✅ | Your instance URL | `https://mycompany.openproject.com` |
+| `OPENPROJECT_API_KEY` | ✅ | API key from your account | `8169846b42461e6e...` |
+| `OPENPROJECT_PROXY` | ❌ | HTTP proxy URL | `http://proxy.company.com:8080` |
+| `LOG_LEVEL` | ❌ | `DEBUG` / `INFO` / `WARNING` / `ERROR` | `INFO` |
+| `TEST_CONNECTION_ON_STARTUP` | ❌ | Test API connection at boot | `true` |
+
+### Getting an API key
+
+1. Log in to OpenProject.
+2. Open the user menu (top right) → **Account settings**.
+3. Go to **Access tokens**.
+4. Under **API**, click **+ Api token**, name it, and copy the value.
+
+---
+
+## Connecting an MCP client
+
+The stdio entry point (`openproject-mcp-fastmcp.py`) works with both **Claude Desktop** and **Claude Code (VS Code extension)**.
+
+### Option A — CLI (recommended)
+
+Replace `<PROJECT_PATH>` with your absolute install path.
+
+```powershell
+# Windows
+claude mcp add openproject-fastmcp "<PROJECT_PATH>\.venv\Scripts\python.exe" "<PROJECT_PATH>\openproject-mcp-fastmcp.py" `
+  -e "PYTHONPATH=<PROJECT_PATH>" `
+  -e "OPENPROJECT_URL=https://your-instance.com" `
+  -e "OPENPROJECT_API_KEY=your-api-key"
+```
+
+```bash
+# macOS / Linux
+claude mcp add openproject-fastmcp "<PROJECT_PATH>/.venv/bin/python" "<PROJECT_PATH>/openproject-mcp-fastmcp.py" \
+  -e "PYTHONPATH=<PROJECT_PATH>" \
+  -e "OPENPROJECT_URL=https://your-instance.com" \
+  -e "OPENPROJECT_API_KEY=your-api-key"
+```
+
+Verify:
+
+```bash
+claude mcp list
+# openproject-fastmcp: ... - ✓ Connected
+```
+
+Then restart Claude Desktop or reload the VS Code window.
+
+### Option B — Manual config
+
+Edit your client config file:
+
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-**Windows Configuration:**
 ```json
 {
   "mcpServers": {
     "openproject-fastmcp": {
-      "command": "D:\\Promete\\Project\\mcp-openproject\\openproject-mcp-server\\.venv\\Scripts\\python.exe",
-      "args": ["D:\\Promete\\Project\\mcp-openproject\\openproject-mcp-server\\openproject-mcp-fastmcp.py"],
+      "command": "<PROJECT_PATH>/.venv/bin/python",
+      "args": ["<PROJECT_PATH>/openproject-mcp-fastmcp.py"],
       "env": {
-        "PYTHONPATH": "D:\\Promete\\Project\\mcp-openproject\\openproject-mcp-server",
+        "PYTHONPATH": "<PROJECT_PATH>",
         "OPENPROJECT_URL": "https://your-instance.com",
         "OPENPROJECT_API_KEY": "your-api-key"
       }
@@ -207,782 +153,168 @@ Add this configuration to your Claude Desktop config file:
 }
 ```
 
-**macOS/Linux Configuration:**
+On Windows use double-backslash paths (e.g. `C:\\Users\\you\\openproject-mcp-server\\.venv\\Scripts\\python.exe`).
+
+> Passing credentials through the client config keeps them out of a committed `.env` file.
+
+**If you see `✗ Failed to connect`:** check the Python path, confirm `openproject-mcp-fastmcp.py` exists, verify the env vars, and restart the client.
+
+---
+
+## Cloud deployment (FastMCP)
+
+For team-wide access without per-user local installs, deploy the SSE entry point (`openproject-mcp-sse.py`) to FastMCP Cloud.
+
+```bash
+pip install fastmcp
+fastmcp login
+fastmcp deploy        # uses .fastmcp.yaml
+```
+
+Set `OPENPROJECT_URL`, `OPENPROJECT_API_KEY`, and optionally `OPENPROJECT_PROXY` in the FastMCP Cloud dashboard. Clients then connect over SSE:
+
 ```json
 {
   "mcpServers": {
-    "openproject-fastmcp": {
-      "command": "/path/to/project/.venv/bin/python",
-      "args": ["/path/to/project/openproject-mcp-fastmcp.py"],
-      "env": {
-        "PYTHONPATH": "/path/to/project",
-        "OPENPROJECT_URL": "https://your-instance.com",
-        "OPENPROJECT_API_KEY": "your-api-key"
-      }
+    "openproject": {
+      "url": "https://mcp.fastmcp.com/sse/openproject-mcp",
+      "transport": "sse"
     }
   }
 }
 ```
 
-**Note:** Using environment variables in config is more secure than storing credentials in `.env` file.
+See [docs/](docs/) for the full cloud deployment and admin guides.
 
-**Verification:**
+---
 
-Check if the server is connected:
-```powershell
-claude mcp list
+## Project structure
+
+```
+openproject-mcp-fastmcp.py   # stdio entry point (local clients)
+openproject-mcp-sse.py       # SSE entry point (FastMCP Cloud)
+.fastmcp.yaml                # cloud deployment config
+src/
+  server.py                  # FastMCP server + tool registration
+  client.py                  # OpenProject API v3 client
+  auth.py                    # API-key auth
+  tools/                     # tools grouped by domain
+    work_packages.py  hierarchy.py  relations.py
+    projects.py       memberships.py  users.py
+    versions.py       time_entries.py  news.py
+    weekly_reports.py connection.py
 ```
 
-You should see:
-```
-openproject-fastmcp: ... - ✓ Connected
-```
+---
 
-If you see `✗ Failed to connect`, check:
-1. Python path is correct
-2. `openproject-mcp-fastmcp.py` file exists
-3. Environment variables are set correctly
-4. Restart Claude Desktop after configuration changes
+## Available tools
 
-### Option 2: Cloud Deployment (FastMCP Cloud) ☁️
+### Connection
+`test_connection`, `check_permissions`
 
-Deploy to FastMCP Cloud for centralized access across your organization. This eliminates the need for each user to install Python and run the server locally.
+### Work packages
+`list_work_packages`, `search_work_packages`, `get_work_package`, `create_work_package`, `update_work_package`, `delete_work_package`, `assign_work_package`, `unassign_work_package`, `add_work_package_comment`, `list_work_package_activities`, `list_types`, `list_statuses`, `list_priorities`
 
-**Benefits:**
-- No local installation required for end users
-- Centralized API key and configuration management
-- Access from anywhere with internet
-- Automatic scaling and monitoring
-- Team collaboration features
+Convenience filters: `list_overdue_work_packages`, `list_work_packages_due_soon`, `list_unassigned_work_packages`, `list_work_packages_created_recently`, `list_high_priority_work_packages`, `list_work_packages_nearly_complete`
 
-**Quick Start:**
+`list_work_packages` is the most powerful search tool — it accepts ~23 filter parameters (project, assignee, priority/type/status/version IDs, date ranges, completion %, author, parent, unassigned/overdue flags), all combined with AND logic.
 
-1. **Ensure you have the SSE entry point:**
-   ```bash
-   # The project includes openproject-mcp-sse.py for cloud deployment
-   ls openproject-mcp-sse.py
-   ```
+### Hierarchy & relations
+`set_work_package_parent`, `remove_work_package_parent`, `list_work_package_children`, `create_work_package_relation`, `list_work_package_relations`, `get_work_package_relation`, `update_work_package_relation`, `delete_work_package_relation`
 
-2. **Create/update .fastmcp.yaml config:**
-   ```yaml
-   name: openproject-mcp
-   version: "1.0.0"
-   description: "OpenProject MCP Server for Claude Desktop"
+Relation types: `blocks`, `follows`, `precedes`, `relates`, `duplicates`, `includes`, `requires`, `partof`.
 
-   entry_point: openproject-mcp-sse.py
+### Projects
+`list_projects`, `get_project`, `create_project`, `update_project`, `delete_project`, `get_subprojects`, `add_subproject`
 
-   runtime:
-     python_version: "3.11"
+### Members & roles
+`list_memberships`, `get_membership`, `create_membership`, `update_membership`, `delete_membership`, `list_project_members`, `list_user_projects`, `list_roles`, `get_role`
 
-   environment:
-     - OPENPROJECT_URL
-     - OPENPROJECT_API_KEY
-     - OPENPROJECT_PROXY
-   ```
+### Users
+`list_users`, `get_user`
 
-3. **Deploy to FastMCP Cloud:**
-   ```bash
-   # Install FastMCP CLI (if not installed)
-   pip install fastmcp
+### Time tracking
+`list_time_entries`, `create_time_entry`, `update_time_entry`, `delete_time_entry`, `list_time_entry_activities`
 
-   # Login to FastMCP Cloud
-   fastmcp login
+### Versions
+`list_versions`, `create_version`
 
-   # Deploy your server
-   fastmcp deploy
-   ```
+### News
+`list_news`, `get_news`, `create_news`, `update_news`, `delete_news`
 
-4. **Configure environment variables** on FastMCP Cloud dashboard:
-   - `OPENPROJECT_URL`: Your OpenProject instance URL
-   - `OPENPROJECT_API_KEY`: Your API key
-   - `OPENPROJECT_PROXY`: (Optional) Proxy URL if needed
+### Reports
+`generate_weekly_report`, `generate_this_week_report`, `generate_last_week_report`, `get_report_data`
 
-5. **Users connect via Claude Desktop** with SSE transport:
-   ```json
-   {
-     "mcpServers": {
-       "openproject": {
-         "url": "https://mcp.fastmcp.com/sse/openproject-mcp",
-         "transport": "sse"
-       }
-     }
-   }
-   ```
+> Tool parameters are exposed via the MCP schema, so your client (and the LLM) sees the full argument list for each tool at runtime — no need to memorize them.
 
-**📚 Detailed Documentation:**
-- [Quick Start Guide](QUICK_START_CLOUD.md) - Fast setup in 5 minutes
-- [FastMCP Cloud Deployment Guide (English)](FASTMCP_CLOUD_DEPLOYMENT.md) - Comprehensive guide
-- [Hướng dẫn kết nối Cloud (Tiếng Việt)](HUONG_DAN_KET_NOI_CLOUD.md) - Vietnamese guide
+### Example prompts
 
-For comprehensive deployment instructions, troubleshooting, and best practices, see the guides above.
-
-### Available Tools
-
-#### 1. `test_connection`
-Test the connection to your OpenProject instance.
-
-**Example:**
-```
-Test the OpenProject connection
-```
-
-#### 2. `list_projects`
-List all projects you have access to.
-
-**Parameters:**
-- `active_only` (boolean, optional): Show only active projects (default: true)
-
-**Example:**
-```
-List all active projects
-```
-
-#### 3. `list_work_packages` ⭐ ENHANCED
-List work packages with advanced filtering capabilities - the most powerful search tool.
-
-**Basic Parameters:**
-- `project_id` (integer, optional): Filter by project
-- `assignee_id` (integer, optional): Filter by assignee
-- `active_only` (boolean, optional): Only open tasks (default: true)
-- `offset` (integer, optional): Pagination offset (default: 0)
-- `page_size` (integer, optional): Results per page (default: 20, max: 100)
-
-**Advanced Filters (NEW - 18 parameters):**
-- `priority_ids` (string, optional): Comma-separated priority IDs (e.g., "3,4")
-- `type_ids` (string, optional): Comma-separated type IDs (e.g., "1,2")
-- `status_ids` (string, optional): Comma-separated status IDs (overrides active_only)
-- `version_ids` (string, optional): Comma-separated version/sprint IDs
-- `due_before` (string, optional): Due before date (YYYY-MM-DD)
-- `due_after` (string, optional): Due after date (YYYY-MM-DD)
-- `created_after` (string, optional): Created after date (YYYY-MM-DD)
-- `updated_after` (string, optional): Updated after date (YYYY-MM-DD)
-- `unassigned_only` (boolean, optional): Only unassigned tasks
-- `overdue_only` (boolean, optional): Only overdue tasks
-- `percentage_done_min` (integer, optional): Min completion % (0-100)
-- `percentage_done_max` (integer, optional): Max completion % (0-100)
-- `author_id` (integer, optional): Filter by task creator
-- `parent_id` (integer, optional): Child tasks of parent
-- `no_parent_only` (boolean, optional): Only top-level tasks
-
-**Features:**
-- **23 total parameters** for ultimate flexibility
-- All filters use AND logic
-- 100% backward compatible
-- Smart filter priority (e.g., status_ids > active_only)
-
-**Examples:**
 ```
 Find high-priority bugs due this week in project 5
-```
-```
-Find overdue unassigned tasks
-```
-```
-Show tasks 50-80% complete
-```
-
-#### 4. `search_work_packages`
-Search work packages by subject or ID using server-side filtering.
-
-**Parameters:**
-- `query` (string, required): Search text to match against work package subject or ID
-- `project_id` (integer, optional): Limit search to a specific project
-- `active_only` (boolean, optional): Search only open work packages (default: true)
-- `offset` (integer, optional): Starting index for pagination (default: 0)
-- `page_size` (integer, optional): Number of results per page (default: 20, max: 100)
-
-**Example:**
-```
-Search for tasks containing "login"
-```
-```
-Search for work package by ID: "123"
-```
-
-**Note:** This tool provides fast search without needing to paginate through all tasks. Use this when you need to find specific tasks by name or ID.
-
-#### 5. `list_types`
-List available work package types.
-
-**Parameters:**
-- `project_id` (integer, optional): Filter types by project
-
-**Example:**
-```
-List all work package types
-```
-
-#### 6. `create_work_package`
-Create a new work package.
-
-**Parameters:**
-- `project_id` (integer, required): The project ID
-- `subject` (string, required): Work package title
-- `type_id` (integer, required): Type ID (e.g., 1 for Task)
-- `description` (string, optional): Description in Markdown format
-- `priority_id` (integer, optional): Priority ID
-- `assignee_id` (integer, optional): User ID to assign to
-
-**Example:**
-```
-Create a new task in project 5 titled "Update documentation" with type ID 1
-```
-
-#### 7. `list_users`
-List all users in the OpenProject instance.
-
-**Parameters:**
-- `active_only` (boolean, optional): Show only active users (default: true)
-
-#### 8. `get_user`
-Get detailed information about a specific user.
-
-**Parameters:**
-- `user_id` (integer, required): User ID
-
-#### 9. `list_memberships`
-List project memberships showing users and their roles.
-
-**Parameters:**
-- `project_id` (integer, optional): Filter by specific project
-- `user_id` (integer, optional): Filter by specific user
-
-#### 10. `list_statuses`
-List all available work package statuses.
-
-#### 11. `list_priorities`
-List all available work package priorities.
-
-#### 12. `get_work_package`
-Get detailed information about a specific work package.
-
-**Parameters:**
-- `work_package_id` (integer, required): Work package ID
-
-#### 13. `update_work_package`
-Update an existing work package.
-
-**Parameters:**
-- `work_package_id` (integer, required): Work package ID
-- `subject` (string, optional): Work package title
-- `description` (string, optional): Description in Markdown format
-- `type_id` (integer, optional): Type ID
-- `status_id` (integer, optional): Status ID
-- `priority_id` (integer, optional): Priority ID
-- `assignee_id` (integer, optional): User ID to assign to
-- `percentage_done` (integer, optional): Completion percentage (0-100)
-
-#### 13. `delete_work_package`
-Delete a work package.
-
-**Parameters:**
-- `work_package_id` (integer, required): Work package ID
-
-### Advanced Filters 🔍
-
-The following tools provide specialized filtering capabilities for common work package search scenarios. All tools support flexible filtering by project, assignee, priority, and type.
-
-#### 14. `list_overdue_work_packages`
-List all work packages that are past their due date.
-
-**Parameters:**
-- `project_id` (integer, optional): Filter by project
-- `assignee_id` (integer, optional): Filter by assignee
-- `priority_ids` (string, optional): Comma-separated priority IDs (e.g., "3,4")
-- `type_ids` (string, optional): Comma-separated type IDs (e.g., "1,2")
-- `page_size` (integer, optional): Results per page (default: 50, max: 100)
-
-**Features:**
-- Shows "X days overdue" for each task
-- Sorted by most overdue first
-- Only searches open (non-closed) tasks
-
-**Example:**
-```
-Find all overdue high-priority tasks in project 5
-```
-
-#### 15. `list_work_packages_due_soon`
-List work packages due within the next N days.
-
-**Parameters:**
-- `days` (integer, optional): Days to look ahead (default: 7, max: 365)
-- `project_id` (integer, optional): Filter by project
-- `assignee_id` (integer, optional): Filter by assignee
-- `priority_ids` (string, optional): Comma-separated priority IDs
-- `page_size` (integer, optional): Results per page (default: 50, max: 100)
-
-**Features:**
-- Shows "Due in X days", "Due tomorrow", or "Due today!"
-- Sorted by soonest first
-- Configurable lookahead period
-
-**Example:**
-```
-Show me tasks due in the next 3 days
-```
-
-#### 16. `list_unassigned_work_packages`
-List work packages that have no assignee.
-
-**Parameters:**
-- `project_id` (integer, optional): Filter by project
-- `priority_ids` (string, optional): Comma-separated priority IDs
-- `type_ids` (string, optional): Comma-separated type IDs
-- `active_only` (boolean, optional): Only open tasks (default: true)
-- `page_size` (integer, optional): Results per page (default: 50, max: 100)
-
-**Features:**
-- Identifies tasks needing assignment
-- Useful for sprint planning
-- Supports priority and type filtering
-
-**Example:**
-```
-Find unassigned high-priority bugs in project 5
-```
-
-#### 17. `list_work_packages_created_recently`
-List work packages created in the last N days.
-
-**Parameters:**
-- `days` (integer, optional): Days to look back (default: 7, max: 365)
-- `project_id` (integer, optional): Filter by project
-- `assignee_id` (integer, optional): Filter by assignee
-- `type_ids` (string, optional): Comma-separated type IDs
-- `active_only` (boolean, optional): Only open tasks (default: true)
-- `page_size` (integer, optional): Results per page (default: 50, max: 100)
-
-**Features:**
-- Track new task creation patterns
-- Sorted by newest first
-- Configurable lookback period
-
-**Example:**
-```
-Show bugs created in the last 3 days
-```
-
-#### 18. `list_high_priority_work_packages`
-List work packages with high priority.
-
-**Parameters:**
-- `project_id` (integer, optional): Filter by project
-- `assignee_id` (integer, optional): Filter by assignee
-- `type_ids` (string, optional): Comma-separated type IDs
-- `active_only` (boolean, optional): Only open tasks (default: true)
-- `page_size` (integer, optional): Results per page (default: 50, max: 100)
-
-**Features:**
-- Assumes priority ID 3 = "High" (typical default)
-- Includes helpful note about using `list_priorities` if needed
-- Quick access to urgent tasks
-
-**Example:**
-```
-Show all high-priority tasks in project 5
-```
-
-**Note:** If your OpenProject instance uses different priority IDs, use `list_priorities` to find the correct ID, then use the enhanced `list_work_packages` with specific `priority_ids` parameter.
-
-#### 19. `list_work_packages_nearly_complete`
-List work packages that are nearly complete (high percentage done).
-
-**Parameters:**
-- `project_id` (integer, optional): Filter by project
-- `assignee_id` (integer, optional): Filter by assignee
-- `min_percentage` (integer, optional): Minimum completion % (default: 80, range: 1-99)
-- `active_only` (boolean, optional): Only open tasks (default: true)
-- `page_size` (integer, optional): Results per page (default: 50, max: 100)
-
-**Features:**
-- Find tasks needing final push
-- Sorted by highest percentage first
-- Includes completion summary section
-- Useful for sprint reviews
-
-**Example:**
-```
-Show tasks more than 90% complete
-```
-
-#### 20. `list_time_entries`
-List time entries with optional filtering.
-
-**Parameters:**
-- `work_package_id` (integer, optional): Filter by specific work package
-- `user_id` (integer, optional): Filter by specific user
-
-#### 15. `create_time_entry`
-Create a new time entry.
-
-**Parameters:**
-- `work_package_id` (integer, required): Work package ID
-- `hours` (number, required): Hours spent (e.g., 2.5)
-- `spent_on` (string, required): Date when time was spent (YYYY-MM-DD format)
-- `comment` (string, optional): Comment/description
-- `activity_id` (integer, optional): Activity ID
-
-#### 16. `update_time_entry`
-Update an existing time entry.
-
-**Parameters:**
-- `time_entry_id` (integer, required): Time entry ID
-- `hours` (number, optional): Hours spent
-- `spent_on` (string, optional): Date when time was spent
-- `comment` (string, optional): Comment/description
-- `activity_id` (integer, optional): Activity ID
-
-#### 17. `delete_time_entry`
-Delete a time entry.
-
-**Parameters:**
-- `time_entry_id` (integer, required): Time entry ID
-
-#### 18. `list_time_entry_activities`
-List available time entry activities.
-
-#### 19. `list_versions`
-List project versions/milestones.
-
-**Parameters:**
-- `project_id` (integer, optional): Filter by specific project
-
-#### 20. `create_version`
-Create a new project version/milestone.
-
-**Parameters:**
-- `project_id` (integer, required): Project ID
-- `name` (string, required): Version name
-- `description` (string, optional): Version description
-- `start_date` (string, optional): Start date (YYYY-MM-DD format)
-- `end_date` (string, optional): End date (YYYY-MM-DD format)
-- `status` (string, optional): Version status (open, locked, closed)
-
-#### 21. `create_project`
-Create a new project.
-
-**Parameters:**
-- `name` (string, required): Project name
-- `identifier` (string, required): Project identifier (unique)
-- `description` (string, optional): Project description
-- `public` (boolean, optional): Whether the project is public
-- `status` (string, optional): Project status
-- `parent_id` (integer, optional): Parent project ID
-
-**Example:**
-```
-Create a new project named "Website Redesign" with identifier "web-redesign"
-```
-
-#### 22. `update_project`
-Update an existing project.
-
-**Parameters:**
-- `project_id` (integer, required): Project ID
-- `name` (string, optional): Project name
-- `identifier` (string, optional): Project identifier
-- `description` (string, optional): Project description
-- `public` (boolean, optional): Whether the project is public
-- `status` (string, optional): Project status
-- `parent_id` (integer, optional): Parent project ID
-
-#### 23. `delete_project`
-Delete a project.
-
-**Parameters:**
-- `project_id` (integer, required): Project ID
-
-#### 24. `get_project`
-Get detailed information about a specific project.
-
-**Parameters:**
-- `project_id` (integer, required): Project ID
-
-#### 25. `create_membership`
-Create a new project membership.
-
-**Parameters:**
-- `project_id` (integer, required): Project ID
-- `user_id` (integer, optional): User ID (required if group_id not provided)
-- `group_id` (integer, optional): Group ID (required if user_id not provided)
-- `role_ids` (array, optional): Array of role IDs
-- `role_id` (integer, optional): Single role ID (alternative to role_ids)
-- `notification_message` (string, optional): Optional notification message
-
-**Example:**
-```
-Add user 5 to project 2 with role ID 3 (Developer role)
-```
-
-#### 26. `update_membership`
-Update an existing membership.
-
-**Parameters:**
-- `membership_id` (integer, required): Membership ID
-- `role_ids` (array, optional): Array of role IDs
-- `role_id` (integer, optional): Single role ID
-- `notification_message` (string, optional): Optional notification message
-
-#### 27. `delete_membership`
-Delete a membership.
-
-**Parameters:**
-- `membership_id` (integer, required): Membership ID
-
-#### 28. `get_membership`
-Get detailed information about a specific membership.
-
-**Parameters:**
-- `membership_id` (integer, required): Membership ID
-
-#### 29. `list_project_members`
-List all members of a specific project.
-
-**Parameters:**
-- `project_id` (integer, required): Project ID
-
-**Example:**
-```
-List all members of project 5
-```
-
-#### 30. `list_user_projects`
-List all projects a specific user is assigned to.
-
-**Parameters:**
-- `user_id` (integer, required): User ID
-
-#### 31. `list_roles`
-List all available roles.
-
-**Example:**
-```
-List all available roles in the OpenProject instance
-```
-
-#### 32. `get_role`
-Get detailed information about a specific role.
-
-**Parameters:**
-- `role_id` (integer, required): Role ID
-
-#### 33. `set_work_package_parent`
-Set a parent for a work package (create parent-child relationship).
-
-**Parameters:**
-- `work_package_id` (integer, required): Work package ID to become a child
-- `parent_id` (integer, required): Work package ID to become the parent
-
-**Example:**
-```
+Show me unassigned tasks more than 80% complete
+Create a task in project 5 titled "Update docs" of type 1
+Log 2.5 hours of Development work on work package 42 for today
 Set work package 15 as a child of work package 10
+Generate this week's report
 ```
 
-#### 34. `remove_work_package_parent`
-Remove parent relationship from a work package (make it top-level).
+---
 
-**Parameters:**
-- `work_package_id` (integer, required): Work package ID to remove parent from
+## Notes & known limitations
 
-#### 35. `list_work_package_children`
-List all child work packages of a parent.
+- **`list_time_entry_activities`** may return `404` on some instances even though time-entry activities work. Common default IDs: `1` Management, `2` Specification, `3` Development, `4` Testing — e.g. `create_time_entry` with `activity_id: 3`.
+- **`list_memberships`** user-ID filtering isn't supported on all instances; project-level and global filtering work reliably.
+- **`list_high_priority_work_packages`** assumes priority ID `3` = "High". If your instance differs, run `list_priorities` and pass `priority_ids` to `list_work_packages` instead.
+- Most create/update/delete operations require matching OpenProject permissions. Run `check_permissions` to diagnose `403` errors.
 
-**Parameters:**
-- `parent_id` (integer, required): Parent work package ID
-- `include_descendants` (boolean, optional): Include grandchildren and all descendants (default: false)
-
-**Example:**
-```
-List all children of work package 10 including descendants
-```
-
-#### 36. `create_work_package_relation`
-Create a relationship between work packages.
-
-**Parameters:**
-- `from_id` (integer, required): Source work package ID
-- `to_id` (integer, required): Target work package ID
-- `relation_type` (string, required): Relation type (blocks, follows, precedes, relates, duplicates, includes, requires, partof)
-- `lag` (integer, optional): Lag in working days (for follows/precedes)
-- `description` (string, optional): Optional description of the relation
-
-**Example:**
-```
-Create a "blocks" relation where work package 5 blocks work package 8
-```
-
-#### 37. `list_work_package_relations`
-List work package relations with optional filtering.
-
-**Parameters:**
-- `work_package_id` (integer, optional): Filter relations involving this work package ID
-- `relation_type` (string, optional): Filter by relation type
-
-#### 38. `update_work_package_relation`
-Update an existing work package relation.
-
-**Parameters:**
-- `relation_id` (integer, required): Relation ID
-- `relation_type` (string, optional): New relation type
-- `lag` (integer, optional): Lag in working days
-- `description` (string, optional): Optional description
-
-#### 39. `delete_work_package_relation`
-Delete a work package relation.
-
-**Parameters:**
-- `relation_id` (integer, required): Relation ID
-
-#### 40. `get_work_package_relation`
-Get detailed information about a specific work package relation.
-
-**Parameters:**
-- `relation_id` (integer, required): Relation ID
-
-## Development
-
-### Setting up Development Environment
-
-```bash
-# Install development dependencies
-uv sync --extra dev
-
-# Or install manually
-uv pip install -e ".[dev]"
-```
-
-### Running Tests
-
-```bash
-uv run pytest tests/
-```
-
-### Code Formatting
-
-```bash
-# Format code
-uv run black openproject-mcp.py
-
-# Lint code
-uv run flake8 openproject-mcp.py
-```
-
-### Adding Dependencies
-
-```bash
-# Add a new dependency
-uv add package-name
-
-# Add a development dependency
-uv add --dev package-name
-
-# Update dependencies
-uv sync
-```
-
-## Tool Compatibility & Test Results
-
-### ✅ Fully Working Tools (40/42)
-All these tools have been tested and work correctly with admin privileges:
-
-**Core Project Management:**
-- `test_connection`, `check_permissions`, `list_projects`, `create_project`, `update_project`
-- `delete_project`, `get_project`
-
-**Work Package Management:**
-- `list_work_packages`, `search_work_packages`, `list_types`, `create_work_package`, `update_work_package`
-- `delete_work_package`, `get_work_package`, `list_statuses`, `list_priorities`
-
-**Work Package Hierarchy & Relations:**
-- `set_work_package_parent`, `remove_work_package_parent`, `list_work_package_children`
-- `create_work_package_relation`, `list_work_package_relations`, `update_work_package_relation`
-- `delete_work_package_relation`, `get_work_package_relation`
-
-**User & Membership Management:**
-- `list_users`, `get_user`, `create_membership`, `update_membership`, `delete_membership`
-- `get_membership`, `list_project_members`, `list_user_projects`, `list_roles`, `get_role`
-
-**Time Tracking:**
-- `list_time_entries`, `create_time_entry`, `update_time_entry`, `delete_time_entry`
-
-**Project Versions:**
-- `list_versions`, `create_version`
-
-### ⚠️ Partially Working Tools
-- **`list_memberships`**: Works globally and with `project_id` filtering. User ID filtering (`user_id`) may not be supported in all OpenProject instances.
-
-### ❌ Endpoint Limitations with Workarounds
-- **`list_time_entry_activities`**: Returns 404 but time entry activities ARE functional! Use these predefined activity IDs:
-  - **Management (ID: 1)**: Administrative and planning tasks
-  - **Specification (ID: 2)**: Requirements and documentation  
-  - **Development (ID: 3)**: Coding and implementation
-  - **Testing (ID: 4)**: Quality assurance and testing
-
-**Example**: `create_time_entry` with `activity_id: 3` for Development work
-
-### Permission Requirements
-Most create/update/delete operations require appropriate permissions:
-- **Project Operations**: Require global "Create project" and "Edit project" permissions. Deletion typically requires admin rights
-- **Work Package Operations**: Require "Create/Edit work packages" permission in target projects
-- **Work Package Relations & Hierarchy**: Require "Edit work packages" permission for creating/modifying parent-child relationships and dependencies
-- **Membership Management**: Require "Manage members" permission for target projects
-- **Time Entry Operations**: Require time tracking permissions
-- **Version Management**: Require project admin or version management permissions
-- **User Operations**: Admin privileges may be needed for comprehensive user management
-- **Role Management**: Read-only operations generally available; admin privileges may be needed for detailed role information
-
-Use the `check_permissions` tool to diagnose permission-related issues.
+---
 
 ## Troubleshooting
 
-### Connection Issues
+| Symptom | Likely cause |
+|---------|--------------|
+| `401 Unauthorized` | API key wrong or inactive |
+| `403 Forbidden` | User lacks the required permission |
+| `404 Not Found` | Wrong URL, or the resource doesn't exist |
+| Proxy errors | Check `OPENPROJECT_PROXY` and proxy auth |
+| SSL errors | Self-signed certs or proxy SSL interception |
+| No projects found | API user lacks project-view permission |
 
-1. **401 Unauthorized**: Check your API key is correct and active
-2. **403 Forbidden**: Ensure your user has the necessary permissions
-3. **404 Not Found**: Verify the OpenProject URL and that resources exist
-4. **Proxy Errors**: Check proxy settings and authentication
+Enable verbose logs with `LOG_LEVEL=DEBUG`.
 
-### Debug Mode
+---
 
-Enable debug logging by setting:
-```env
-LOG_LEVEL=DEBUG
+## Development
+
+```bash
+uv sync --extra dev          # install dev dependencies
+uv run pytest tests/         # run tests
+uv run black src/            # format
+uv run flake8 src/           # lint
+uv add <package>             # add a dependency
 ```
 
-### Common Issues
+---
 
-- **No projects found**: Ensure your API user has project view permissions
-- **SSL errors**: May occur with self-signed certificates or proxy SSL interception
-- **Timeout errors**: Increase timeout or check network connectivity
+## Security
 
-## Security Considerations
+- Never commit your `.env` file (it's git-ignored).
+- Prefer passing credentials via the MCP client config over a `.env` file.
+- Rotate API keys periodically and always use HTTPS.
 
-- Never commit your `.env` file to version control
-- Use environment variables for sensitive data
-- Rotate API keys regularly
-- Use HTTPS for all OpenProject connections
-- Configure proxy authentication securely if needed
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+No license is currently granted. This is a fork of
+[AndyEverything/openproject-mcp-server](https://github.com/AndyEverything/openproject-mcp-server),
+which carries no license — so all rights are reserved by the original author(s).
+Until a license is added upstream, you have no granted rights to use, copy, modify,
+or distribute this code beyond viewing it. If you intend to reuse it, contact the
+original author for permission.
 
 ## Acknowledgments
 
-- Built for the [Model Context Protocol](https://modelcontextprotocol.io/)
+- Built on the [Model Context Protocol](https://modelcontextprotocol.io/) and [FastMCP](https://github.com/jlowin/fastmcp)
 - Integrates with [OpenProject](https://www.openproject.org/)
-- Inspired by the MCP community
-
-## Support
-
-- 🐛 Issues: [GitHub Issues](https://github.com/AndyEverything/openproject-mcp-server/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/AndyEverything/openproject-mcp-server/discussions)
+- Forked from [AndyEverything/openproject-mcp-server](https://github.com/AndyEverything/openproject-mcp-server)
