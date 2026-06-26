@@ -51,10 +51,12 @@ async def list_time_entries(
             filters.append({"work_package": {"operator": "=", "values": [str(work_package_id)]}})
         if user_id:
             filters.append({"user": {"operator": "=", "values": [str(user_id)]}})
-        if from_date:
-            filters.append({"spent_on": {"operator": ">=", "values": [from_date]}})
-        if to_date:
-            filters.append({"spent_on": {"operator": "<=", "values": [to_date]}})
+        if from_date and to_date:
+            filters.append({"spent_on": {"operator": "<>d", "values": [from_date, to_date]}})
+        elif from_date:
+            filters.append({"spent_on": {"operator": "<>d", "values": [from_date, ""]}})
+        elif to_date:
+            filters.append({"spent_on": {"operator": "<>d", "values": ["", to_date]}})
 
         filters_json = json.dumps(filters) if filters else None
 
@@ -64,13 +66,30 @@ async def list_time_entries(
         if not entries:
             return "No time entries found."
 
+        import re
+
+        def parse_hours(val):
+            if val is None:
+                return 0.0
+            if isinstance(val, (int, float)):
+                return float(val)
+            m = re.match(r"P(?:(\d+(?:\.\d+)?)D)?(?:T(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?)?", str(val))
+            if not m:
+                return 0.0
+            d, h, mi, s = (float(x) if x else 0.0 for x in m.groups())
+            return d * 24 + h + mi / 60 + s / 3600
+
         text = f"✅ **Found {len(entries)} time entr{'y' if len(entries) == 1 else 'ies'}:**\n\n"
-        total_hours = 0
+        total_hours = 0.0
+        per_day = {}
 
         for entry in entries:
+            hrs = parse_hours(entry.get('hours'))
+            day = entry.get('spentOn', 'N/A')
+            per_day[day] = per_day.get(day, 0.0) + hrs
             text += f"**Time Entry #{entry.get('id', 'N/A')}**\n"
-            text += f"  Hours: {entry.get('hours', 0)}\n"
-            text += f"  Date: {entry.get('spentOn', 'N/A')}\n"
+            text += f"  Hours: {hrs}\n"
+            text += f"  Date: {day}\n"
 
             embedded = entry.get("_embedded", {})
             if "workPackage" in embedded:
@@ -83,10 +102,13 @@ async def list_time_entries(
             if entry.get('comment', {}).get('raw'):
                 text += f"  Comment: {entry['comment']['raw']}\n"
 
-            total_hours += entry.get('hours', 0)
+            total_hours += hrs
             text += "\n"
 
-        text += f"**Total Hours**: {total_hours}\n"
+        text += "**Hours per day:**\n"
+        for day in sorted(per_day):
+            text += f"  {day}: {round(per_day[day], 2)}\n"
+        text += f"\n**Total Hours**: {round(total_hours, 2)}\n"
 
         return text
 
