@@ -15,7 +15,7 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for th
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
 - [Connecting an MCP client](#connecting-an-mcp-client)
-- [Cloud deployment](#cloud-deployment-fastmcp)
+- [Self-hosting with Docker (internal network)](#self-hosting-with-docker-internal-network)
 - [Available tools](#available-tools)
 - [Notes & known limitations](#notes--known-limitations)
 - [Troubleshooting](#troubleshooting)
@@ -161,30 +161,85 @@ On Windows use double-backslash paths (e.g. `C:\\Users\\you\\openproject-mcp-ser
 
 ---
 
-## Cloud deployment (FastMCP)
+## Self-hosting with Docker (internal network)
 
-For team-wide access without per-user local installs, deploy the SSE entry point (`openproject-mcp-sse.py`) to FastMCP Cloud.
+Run one shared server on an internal host so your team connects over the network — no per-user Python install. This uses the **HTTP transport** entry point (`openproject-mcp-http.py`), which adds per-user API-key auth.
 
-```bash
-pip install fastmcp
-fastmcp login
-fastmcp deploy        # uses .fastmcp.yaml
+### How it works
+
+```
+Team clients ──HTTP (port 8000)──▶ Docker host (internal LAN) ──HTTPS──▶ OpenProject
+   │                                                                         ▲
+   └─ authenticate with their MCP_API_KEYS key                              │
+                              the server uses one OPENPROJECT_API_KEY ───────┘
 ```
 
-Set `OPENPROJECT_URL`, `OPENPROJECT_API_KEY`, and optionally `OPENPROJECT_PROXY` in the FastMCP Cloud dashboard. Clients then connect over SSE:
+- **`OPENPROJECT_API_KEY`** — single key the server uses to talk to OpenProject.
+- **`MCP_API_KEYS`** — per-user keys clients present to the server, format `key:User,key2:User2`. Used to identify/track who calls. If unset, HTTP auth is disabled (don't do that on a shared network).
+
+### 1. Configure
+
+Edit the `environment:` block in [docker-compose.yml](docker-compose.yml), or create a `.env` file and switch the compose service to `env_file: .env`:
+
+```env
+OPENPROJECT_URL=https://your-instance.openproject.com
+OPENPROJECT_API_KEY=your-openproject-api-key
+MCP_API_KEYS=alice-secret:Alice,bob-secret:Bob
+MCP_HTTP_HOST=0.0.0.0
+MCP_HTTP_PORT=8000
+LOG_LEVEL=INFO
+```
+
+### 2. Build & run
+
+```bash
+docker compose up -d --build      # build image and start detached
+docker compose logs -f            # follow startup logs
+```
+
+You should see `Loaded N API keys` and the server listening on `0.0.0.0:8000`.
+
+Without compose:
+
+```bash
+docker build -t openproject-mcp .
+docker run -d --name openproject-mcp --restart unless-stopped \
+  -p 8000:8000 \
+  -e OPENPROJECT_URL=https://your-instance.openproject.com \
+  -e OPENPROJECT_API_KEY=your-openproject-api-key \
+  -e MCP_API_KEYS="alice-secret:Alice,bob-secret:Bob" \
+  openproject-mcp
+```
+
+### 3. Connect clients
+
+Point each user's MCP client at the host (replace `mcp-host.internal` with the server's LAN hostname or IP, and use that user's key):
 
 ```json
 {
   "mcpServers": {
     "openproject": {
-      "url": "https://mcp.fastmcp.com/sse/openproject-mcp",
-      "transport": "sse"
+      "url": "http://mcp-host.internal:8000/mcp",
+      "transport": "http",
+      "headers": { "Authorization": "Bearer alice-secret" }
     }
   }
 }
 ```
 
-See [docs/](docs/) for the full cloud deployment and admin guides.
+Or via the Claude Code CLI:
+
+```bash
+claude mcp add --transport http openproject http://mcp-host.internal:8000/mcp \
+  --header "Authorization: Bearer alice-secret"
+```
+
+### Production notes
+
+- **TLS**: HTTP is fine inside a trusted LAN. For anything broader, front the container with a reverse proxy (nginx/Caddy/Traefik) terminating HTTPS.
+- **Secrets**: keep keys out of git — use a `.env` file (git-ignored) or Docker/host secrets, not the committed compose file.
+- **Updates**: `git pull && docker compose up -d --build` to redeploy.
+- **Health**: `docker compose ps` and `docker compose logs -f` to check status.
 
 ---
 
@@ -192,12 +247,13 @@ See [docs/](docs/) for the full cloud deployment and admin guides.
 
 ```
 openproject-mcp-fastmcp.py   # stdio entry point (local clients)
-openproject-mcp-sse.py       # SSE entry point (FastMCP Cloud)
-.fastmcp.yaml                # cloud deployment config
+openproject-mcp-http.py      # HTTP entry point (shared/Docker hosting, API-key auth)
+Dockerfile                   # container image
+docker-compose.yml           # internal-network deployment
 src/
+  auth.py                    # per-user API-key auth (HTTP transport)
   server.py                  # FastMCP server + tool registration
   client.py                  # OpenProject API v3 client
-  auth.py                    # API-key auth
   tools/                     # tools grouped by domain
     work_packages.py  hierarchy.py  relations.py
     projects.py       memberships.py  users.py

@@ -1,0 +1,23 @@
+services:
+  openproject-mcp:
+    build: .
+    container_name: openproject-mcp
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # --- OpenProject connection ---
+      OPENPROJECT_URL: "https://your-instance.openproject.com"
+      OPENPROJECT_API_KEY: "your-openproject-api-key"
+      # OPENPROJECT_PROXY: "http://proxy.internal:8080"
+
+      # --- HTTP transport ---
+      MCP_HTTP_HOST: "0.0.0.0"
+      MCP_HTTP_PORT: "8000"
+
+      # --- Client auth (format: key:User,key2:User2) ---
+      MCP_API_KEYS: "changeme-key-1:Alice,changeme-key-2:Bob"
+
+      LOG_LEVEL: "INFO"
+    # Or load everything from a .env file instead of the block above:
+    # env_file: .env

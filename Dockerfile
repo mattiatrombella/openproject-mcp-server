@@ -1,7 +1,19 @@
-FROM python:3.14-slim
+FROM python:3.12-slim
+
 WORKDIR /app
-RUN python -m venv .venv
+
+# Install dependencies first (better layer caching)
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
-CMD ["python", "openproject-mcp.py"]
+
+# HTTP transport listens here
+EXPOSE 8000
+
+ENV MCP_HTTP_HOST=0.0.0.0 \
+    MCP_HTTP_PORT=8000 \
+    PYTHONUNBUFFERED=1
+
+CMD ["python", "openproject-mcp-http.py"]
