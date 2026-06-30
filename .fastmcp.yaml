@@ -38,7 +38,6 @@ include:
   - openproject-mcp-sse.py
   - pyproject.toml
   - README.md
-  - HUONG_DAN_SU_DUNG.md
   - .env.example
 
 # Files to exclude from deployment
@@ -58,7 +57,7 @@ exclude:
   - openproject-mcp-http.py
   - openproject-mcp-fastmcp.py  # stdio version, not needed for cloud
   - test_*.py
-  - *.md  # Exclude other MD files except README and HUONG_DAN
+  - *.md  # Exclude other MD files except README
 
 # Dependencies (auto-detected from pyproject.toml)
 # No need to specify if using pyproject.toml
