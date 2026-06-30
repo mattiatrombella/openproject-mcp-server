@@ -487,6 +487,16 @@ class OpenProjectClient:
             payload["_links"]["version"] = {
                 "href": f"/api/v3/versions/{data['version_id']}"
             }
+        if "category_id" in data:
+            if "_links" not in payload:
+                payload["_links"] = {}
+            if data["category_id"] is None:
+                # Remove category
+                payload["_links"]["category"] = {"href": None}
+            else:
+                payload["_links"]["category"] = {
+                    "href": f"/api/v3/categories/{data['category_id']}"
+                }
         if "percentage_done" in data:
             payload["percentageDone"] = data["percentage_done"]
         if "parent_id" in data:
@@ -759,6 +769,38 @@ class OpenProjectClient:
             payload["status"] = data["status"]
 
         return await self._request("POST", "/versions", payload)
+
+    async def get_categories(self, project_id: int) -> Dict:
+        """
+        Retrieve categories for a project.
+
+        Args:
+            project_id: The project ID
+
+        Returns:
+            Dict: API response containing categories
+        """
+        result = await self._request("GET", f"/projects/{project_id}/categories")
+
+        # Ensure proper response structure
+        if "_embedded" not in result:
+            result["_embedded"] = {"elements": []}
+        elif "elements" not in result.get("_embedded", {}):
+            result["_embedded"]["elements"] = []
+
+        return result
+
+    async def get_category(self, category_id: int) -> Dict:
+        """
+        Retrieve a specific category by ID.
+
+        Args:
+            category_id: The category ID
+
+        Returns:
+            Dict: Category data
+        """
+        return await self._request("GET", f"/categories/{category_id}")
 
     async def check_permissions(self) -> Dict:
         """

@@ -78,8 +78,9 @@ try:
     from src.tools import versions        # 2 tools: list, create
     from src.tools import weekly_reports   # 4 tools: generate_weekly_report, get_report_data, generate_this_week_report, generate_last_week_report
     from src.tools import news             # 5 tools: list_news, create_news, get_news, update_news, delete_news
+    from src.tools import categories       # 3 tools: list_project_categories, get_work_package_category, set_work_package_category
 
-    logger.info("✅ All 49 tool modules loaded successfully")
+    logger.info("✅ All 52 tool modules loaded successfully")
 except ImportError as e:
     logger.warning(f"⚠️  Some tool modules failed to import: {e}")
     raise
