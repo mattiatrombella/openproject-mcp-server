@@ -82,12 +82,54 @@ opmcp
 
 ---
 
+## Option C — `opmcp` shortcut for Command Prompt (cmd.exe)
+
+PowerShell profile functions are **not** visible in `cmd.exe`. To get `opmcp` in cmd,
+put a small `.cmd` wrapper on your `PATH`.
+
+**1. Create a folder for personal scripts** (skip if you already have one on `PATH`):
+
+```powershell
+$bin = "$env:USERPROFILE\bin"
+New-Item -ItemType Directory -Path $bin -Force | Out-Null
+```
+
+**2. Create `opmcp.cmd`** in that folder, pointing at *your* clone path:
+
+```powershell
+Set-Content -Path "$env:USERPROFILE\bin\opmcp.cmd" -Encoding ASCII -Value @'
+@echo off
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\your\clone\scripts\restart_mcp.ps1" %*
+'@
+```
+
+Replace `C:\path\to\your\clone` with your actual repo path.
+
+**3. Add the folder to your user `PATH`** (once):
+
+```powershell
+$bin = "$env:USERPROFILE\bin"
+$p = [Environment]::GetEnvironmentVariable("Path","User")
+if ($p -notlike "*$bin*") { [Environment]::SetEnvironmentVariable("Path", "$p;$bin", "User") }
+```
+
+**4. Open a _new_ cmd window** (PATH changes only apply to new processes) and run:
+
+```cmd
+opmcp
+```
+
+> The same wrapper also works from PowerShell, so `opmcp` is now available in both shells.
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |
 |---|---|
 | `opmcp` / script blocked, "running scripts is disabled" | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 | `claude: command not found` | Install the Claude CLI and ensure it's on `PATH`. |
+| `opmcp` not recognized in cmd | Use Option C (`.cmd` on `PATH`) and open a **new** cmd window. The PowerShell function (Option B) is not visible in cmd. |
 | `python not found in .venv` | Run `uv sync` in the repo root first. |
 | `.env not found` | `cp env_example.txt .env` and fill in your values. |
 | `OPENPROJECT_URL missing` | Check `.env` has `OPENPROJECT_URL=` and `OPENPROJECT_API_KEY=` set. |
