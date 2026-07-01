@@ -67,7 +67,7 @@ try:
     # Phase 1: Priority tools (7 tools)
     from src.tools import connection      # 2 tools: test_connection, check_permissions
     from src.tools import work_packages   # 7 tools: list, create, update, delete, list_types, list_statuses, list_priorities
-    from src.tools import projects        # 5 tools: list, get, create, update, delete
+    from src.tools import projects        # 6 tools: list, get, create, copy, update, delete
 
     # Phase 2: Additional tools (28 tools)
     from src.tools import users           # 6 tools: list_users, get_user, list_roles, get_role, list_project_members, list_user_projects
