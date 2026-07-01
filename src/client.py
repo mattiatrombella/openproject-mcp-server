@@ -849,6 +849,37 @@ class OpenProjectClient:
 
         return await self._request("POST", "/projects", payload)
 
+    async def copy_project(
+        self, source_project_id: int, name: str, identifier: str, meta: Dict
+    ) -> Dict:
+        """
+        Copy an existing project (e.g. a template) into a new project.
+
+        Triggers the asynchronous copy job via POST /projects/{id}/copy. The
+        `_meta` flags control which associated data is carried over from the
+        source project (work packages, members, versions, categories, etc.).
+
+        Args:
+            source_project_id: ID of the project/template to copy from
+            name: Name of the new project
+            identifier: Identifier of the new project (lowercase, no spaces)
+            meta: Dict of `_meta` copy flags (camelCase keys, e.g.
+                {"copyWorkPackages": True, "sendNotifications": False})
+
+        Returns:
+            Dict: The job status resource tracking the copy operation. Once the
+            job finishes its `_links.project` points at the created project.
+        """
+        payload = {
+            "name": name,
+            "identifier": identifier,
+            "_meta": meta,
+        }
+
+        return await self._request(
+            "POST", f"/projects/{source_project_id}/copy", payload
+        )
+
     async def update_project(self, project_id: int, data: Dict) -> Dict:
         """
         Update an existing project.
