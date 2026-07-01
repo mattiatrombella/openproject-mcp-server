@@ -129,6 +129,9 @@ claude mcp list
 
 Then restart Claude Desktop or reload the VS Code window.
 
+> **Windows shortcut:** to re-register the server in one step (remove + add + verify),
+> see [Restarting the MCP server](docs/guides/restart_mcp.md) — includes a global `opmcp` command.
+
 ### Option B — Manual config
 
 Edit your client config file:
